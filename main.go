@@ -15,9 +15,6 @@ import (
 	"golang.org/x/crypto/ssh"
 
 	"github.com/voxelbrain/goptions"
-
-	"isucdc.com/keyescrow/escrow"
-	"isucdc.com/keyescrow/server"
 )
 
 const (
@@ -45,10 +42,6 @@ func main() {
 
 		Generate struct {
 		} `goptions:"generate"`
-
-		Server struct {
-			KeyDir string `goptions:"-k, --keydir, description='Key Directory'"`
-		} `goptions:"server"`
 	}{ // Default values go here
 		Host: &net.TCPAddr{
 			IP:   net.ParseIP("localhost"),
@@ -56,7 +49,7 @@ func main() {
 		},
 	}
 	//options.Host.IP = net.ParseIP(os.Getenv("KE_HOST"))
-	fmt.Println("CDC Key Escrow Server v1")
+	fmt.Println("CDC Key Escrow Client v1")
 	goptions.ParseAndFail(&options)
 
 	if len(options.Verbs) <= 0 {
@@ -72,21 +65,6 @@ func main() {
 	case "set":
 		user := os.Getenv("USER")
 		setKey(options.Host, user, options.Set.Pubkey, options.Set.Privkey)
-		break
-	case "server":
-		if options.Server.KeyDir == "" {
-			options.Server.KeyDir = "./keys"
-		}
-		//log.Printf("Using %v for key storage\n", options.KeyDir)
-		escrow.Keydir = options.Server.KeyDir
-		serv, err := server.New(options.Host)
-		defer serv.Close()
-		if err != nil {
-			log.Fatalf("There was an error starting the server: %v", err.Error())
-		}
-
-		serv.Keydir = options.Server.KeyDir
-		serv.Loop()
 		break
 	case "dispatch":
 		user := os.Getenv("USER")

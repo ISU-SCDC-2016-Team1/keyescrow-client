@@ -8,8 +8,8 @@ import (
 	"net"
 	"os"
 
-	"isucdc.com/keyescrow/escrow"
-	"isucdc.com/keyescrow/server"
+	"isucdc.com/keyescrow-client/escrow"
+	"isucdc.com/keyescrow-client/server"
 
 	zmq "github.com/pebbe/zmq3"
 )
