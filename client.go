@@ -38,7 +38,7 @@ func NewClient(addr *net.TCPAddr) (*Client, error) {
 	return client, nil
 }
 
-func (c *Client) Dispatch(username string) error {
+func (c *Client) Dispatch(username string, token string) error {
 	req := &server.Dispatch{
 		User: username,
 	}
@@ -65,9 +65,10 @@ func (c *Client) Dispatch(username string) error {
 	}
 }
 
-func (c *Client) GetKey(username string) (*escrow.Key, error) {
+func (c *Client) GetKey(username string, token string) (*escrow.Key, error) {
 	req := &server.KeyRequest{
 		User: username,
+		Token: token,
 	}
 	err := req.Send(c.Requester)
 	if err != nil {
@@ -96,9 +97,41 @@ func (c *Client) GetKey(username string) (*escrow.Key, error) {
 	}
 }
 
-func (c *Client) SetKey(user string, pubkey string, privkey string) error {
+func (c *Client) GetToken(username string, password string) (*escrow.Token, error) {
+	req := &server.AuthRequest {
+		User: username,
+		Password: password,
+	}
+	err := req.Send(c.Requester)
+	if err != nil {
+		return nil, err
+	}
+
+	recv, err := c.Requester.RecvBytes(0)
+	if err != nil {
+		return nil, err
+	}
+
+	msg := server.RecvMsg(recv)
+	switch msg.(type) {
+	case server.ErrorMessage:
+		m := msg.(server.ErrorMessage)
+		return nil, errors.New(fmt.Sprintf("The server returned an error: %v", m.Message))
+	case server.AuthResponse:
+		m := msg.(server.AuthResponse)
+		return &escrow.Token{
+			User:       username,
+			Token:  	m.Token,
+		}, nil
+	default:
+		return nil, errors.New("Got unexpected response from server")
+	}
+}
+
+func (c *Client) SetKey(user string, token string, pubkey string, privkey string) error {
 	kr := &server.KeyResponse{
 		User: user,
+		Token: token,
 	}
 	pub, err := os.Open(pubkey)
 	if err != nil {

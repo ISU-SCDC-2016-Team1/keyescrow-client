@@ -15,6 +15,11 @@ type Key struct {
 	PrivateKey string
 }
 
+type Token struct {
+	User       string
+	Token      string
+}
+
 func New(user string, pub string, priv string) *Key {
 	return &Key{
 		User:       user,

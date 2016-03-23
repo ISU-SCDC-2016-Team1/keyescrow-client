@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"time"
 
 	zmq "github.com/pebbe/zmq3"
 )
@@ -14,13 +13,6 @@ const (
 	GITLAB_USER_URL = "http://gitlab/api/v3/users?username=%v&private_token=%v"
 	GITLAB_USER_KEY = "http://gitlab/api/v3/users/%d/keys?private_token=%v"
 )
-
-type authinfo struct {
-	Token  string
-	Issued time.Time
-}
-
-var authTable map[string][]authinfo = make(map[string][]authinfo)
 
 type Server struct {
 	Responder *zmq.Socket

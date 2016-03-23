@@ -14,6 +14,8 @@ import (
 
 	"golang.org/x/crypto/ssh"
 
+	 "github.com/howeyc/gopass"
+
 	"github.com/voxelbrain/goptions"
 )
 
@@ -28,19 +30,31 @@ func main() {
 		Help goptions.Help `goptions:"-h, --help, description='Show this help'"`
 
 		goptions.Verbs
+		Token struct {
+			User string `goptions:"-u, --username, obligatory, description='Username to authenticate with'"`
+		} `goptions:"token"`
+
 		Get struct {
 			To string `goptions:"-t, --save-to, description='Directory to save keypair in'"`
+			User string `goptions:"-u, --username, obligatory, description='Target user to fetch keys of'"`
+			Token string `goptions:"-t, --token, obligatory, description='Authentication token'"`
 		} `goptions:"get"`
 
 		Set struct {
 			Pubkey  string `goptions:"-p, --pubkey, obligatory, description='Filename of the public key'"`
 			Privkey string `goptions:"-i, --privkey, obligatory, description='Filename of the private key'"`
+			User string `goptions:"-u, --username, obligatory, description='Target user to fetch keys of'"`
+			Token string `goptions:"-t, --token, obligatory, description='Authentication token'"`
 		} `goptions:"set"`
 
 		Dispatch struct {
+			User string `goptions:"-u, --username, obligatory, description='Target user to fetch keys of'"`
+			Token string `goptions:"-t, --token, obligatory, description='Authentication token'"`
 		} `goptions:"dispatch"`
 
 		Generate struct {
+			User string `goptions:"-u, --username, obligatory, description='Target user to fetch keys of'"`
+			Token string `goptions:"-t, --token, obligatory, description='Authentication token'"`
 		} `goptions:"generate"`
 	}{ // Default values go here
 		Host: &net.TCPAddr{
@@ -58,20 +72,21 @@ func main() {
 	}
 
 	switch options.Verbs {
+	case "token":
+		password, _ := gopass.GetPasswd()
+		authToken(options.Host, options.Token.User, string(password))
+		break
 	case "get":
-		user := os.Getenv("USER")
-		getKey(options.Host, user, options.Get.To)
+		getKey(options.Host, options.Get.User, options.Get.Token, options.Get.To)
 		break
 	case "set":
-		user := os.Getenv("USER")
-		setKey(options.Host, user, options.Set.Pubkey, options.Set.Privkey)
+		setKey(options.Host, options.Set.User, options.Set.Token, options.Set.Pubkey, options.Set.Privkey)
 		break
 	case "dispatch":
-		user := os.Getenv("USER")
-		dispatchKey(options.Host, user)
+		dispatchKey(options.Host, options.Dispatch.User, options.Dispatch.Token)
 		break
 	case "generate":
-		user := os.Getenv("USER")
+		user := options.Generate.User
 		pubLoc := path.Join("/tmp", fmt.Sprintf("%v.pub", user))
 		priLoc := path.Join("/tmp", user)
 
@@ -100,12 +115,12 @@ func main() {
 
 		ioutil.WriteFile(pubLoc, ssh.MarshalAuthorizedKey(pub), 0777)
 
-		setKey(options.Host, user, pubLoc, priLoc)
+		setKey(options.Host, user, options.Generate.Token, pubLoc, priLoc)
 		break
 	}
 }
 
-func getKey(host *net.TCPAddr, username string, to string) {
+func authToken(host *net.TCPAddr, username string, password string) {
 	client, err := NewClient(host)
 	if err != nil {
 		log.Fatalf("Error connecting to server: %v", err.Error())
@@ -113,16 +128,34 @@ func getKey(host *net.TCPAddr, username string, to string) {
 	// Close the connection by the end of the function
 	defer client.Close()
 
-	key, err := client.GetKey(username)
+	token, err := client.GetToken(username, password)
+	if err != nil {
+		log.Fatalf("Error retrieving token: %v", err.Error())
+	}
+
+	fmt.Println()
+	fmt.Printf("User:  %v\n", token.User)
+	fmt.Printf("Token: %v\n", token.Token)
+}
+
+func getKey(host *net.TCPAddr, username string, token string, to string) {
+	client, err := NewClient(host)
+	if err != nil {
+		log.Fatalf("Error connecting to server: %v", err.Error())
+	}
+	// Close the connection by the end of the function
+	defer client.Close()
+
+	key, err := client.GetKey(username, token)
 	if err != nil {
 		log.Fatalf("Error retrieving key: %v", err.Error())
 	}
 
 	if to == "" {
 		fmt.Println()
-		fmt.Printf("User: %v\n", key.User)
-		fmt.Printf("Public Key: %v\n", key.PublicKey)
-		fmt.Printf("Private Key: %v\n", key.PrivateKey)
+		fmt.Printf("User:        %v\n", key.User)
+		fmt.Printf("Public Key:  \n%v\n\n", key.PublicKey)
+		fmt.Printf("Private Key: \n%v\n\n", key.PrivateKey)
 	} else {
 		if _, err = os.Stat(to); os.IsNotExist(err) {
 			os.MkdirAll(to, 0700)
@@ -149,27 +182,27 @@ func getKey(host *net.TCPAddr, username string, to string) {
 	}
 }
 
-func setKey(host *net.TCPAddr, username string, pubkey string, privkey string) {
+func setKey(host *net.TCPAddr, username string, token string, pubkey string, privkey string) {
 	client, err := NewClient(host)
 	if err != nil {
 		log.Fatalf("Error connecting to server: %v", err.Error())
 	}
 	defer client.Close()
 
-	err = client.SetKey(username, pubkey, privkey)
+	err = client.SetKey(username, token, pubkey, privkey)
 	if err != nil {
 		log.Fatalf("Error setting key: %v", err.Error())
 	}
 }
 
-func dispatchKey(host *net.TCPAddr, username string) {
+func dispatchKey(host *net.TCPAddr, username string, token string) {
 	client, err := NewClient(host)
 	if err != nil {
 		log.Fatalf("Error connecting to server: %v", err.Error())
 	}
 	defer client.Close()
 
-	err = client.Dispatch(username)
+	err = client.Dispatch(username, token)
 	if err != nil {
 		log.Fatalf("Error setting key: %v", err.Error())
 	}
