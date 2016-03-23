@@ -73,6 +73,7 @@ func main() {
 
 	switch options.Verbs {
 	case "token":
+		fmt.Print("password> ")
 		password, _ := gopass.GetPasswd()
 		authToken(options.Host, options.Token.User, string(password))
 		break
@@ -153,9 +154,9 @@ func getKey(host *net.TCPAddr, username string, token string, to string) {
 
 	if to == "" {
 		fmt.Println()
-		fmt.Printf("User:        %v\n", key.User)
-		fmt.Printf("Public Key:  \n%v\n\n", key.PublicKey)
-		fmt.Printf("Private Key: \n%v\n\n", key.PrivateKey)
+		fmt.Printf("User: %v\n", key.User)
+		fmt.Printf("Public Key: %v\n", key.PublicKey)
+		fmt.Printf("Private Key: %v\n", key.PrivateKey)
 	} else {
 		if _, err = os.Stat(to); os.IsNotExist(err) {
 			os.MkdirAll(to, 0700)
