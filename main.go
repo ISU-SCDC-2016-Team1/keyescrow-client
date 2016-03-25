@@ -35,26 +35,22 @@ func main() {
 		} `goptions:"token"`
 
 		Get struct {
-			To string `goptions:"-t, --save-to, description='Directory to save keypair in'"`
+			To string `goptions:"-s, --save-to, description='Directory to save keypair in'"`
 			User string `goptions:"-u, --username, obligatory, description='Target user to fetch keys of'"`
-			Token string `goptions:"-t, --token, obligatory, description='Authentication token'"`
 		} `goptions:"get"`
 
 		Set struct {
 			Pubkey  string `goptions:"-p, --pubkey, obligatory, description='Filename of the public key'"`
 			Privkey string `goptions:"-i, --privkey, obligatory, description='Filename of the private key'"`
 			User string `goptions:"-u, --username, obligatory, description='Target user to fetch keys of'"`
-			Token string `goptions:"-t, --token, obligatory, description='Authentication token'"`
 		} `goptions:"set"`
 
 		Dispatch struct {
 			User string `goptions:"-u, --username, obligatory, description='Target user to fetch keys of'"`
-			Token string `goptions:"-t, --token, obligatory, description='Authentication token'"`
 		} `goptions:"dispatch"`
 
 		Generate struct {
 			User string `goptions:"-u, --username, obligatory, description='Target user to fetch keys of'"`
-			Token string `goptions:"-t, --token, obligatory, description='Authentication token'"`
 		} `goptions:"generate"`
 	}{ // Default values go here
 		Host: &net.TCPAddr{
@@ -78,15 +74,24 @@ func main() {
 		authToken(options.Host, options.Token.User, string(password))
 		break
 	case "get":
-		getKey(options.Host, options.Get.User, options.Get.Token, options.Get.To)
+		fmt.Print("token> ")
+		token, _ := gopass.GetPasswd()
+		getKey(options.Host, options.Get.User, token, options.Get.To)
 		break
 	case "set":
-		setKey(options.Host, options.Set.User, options.Set.Token, options.Set.Pubkey, options.Set.Privkey)
+		fmt.Print("token> ")
+		token, _ := gopass.GetPasswd()
+		setKey(options.Host, options.Set.User, token, options.Set.Pubkey, options.Set.Privkey)
 		break
 	case "dispatch":
-		dispatchKey(options.Host, options.Dispatch.User, options.Dispatch.Token)
+		fmt.Print("token> ")
+		token, _ := gopass.GetPasswd()
+		dispatchKey(options.Host, options.Dispatch.User, token)
 		break
 	case "generate":
+		fmt.Print("token> ")
+		token, _ := gopass.GetPasswd()
+
 		user := options.Generate.User
 		pubLoc := path.Join("/tmp", fmt.Sprintf("%v.pub", user))
 		priLoc := path.Join("/tmp", user)
@@ -116,7 +121,7 @@ func main() {
 
 		ioutil.WriteFile(pubLoc, ssh.MarshalAuthorizedKey(pub), 0777)
 
-		setKey(options.Host, user, options.Generate.Token, pubLoc, priLoc)
+		setKey(options.Host, user, token, pubLoc, priLoc)
 		break
 	}
 }
