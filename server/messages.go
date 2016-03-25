@@ -36,7 +36,6 @@ func RecvMsg(data []byte) Message {
 	m := i.(map[string]interface{})
 	switch m["id"].(float64) {
 	case MSG_KEY_REQUEST:
-		log.Println("Got KEY_REQUEST")
 		var kr KeyRequest
 		if err := json.Unmarshal(data, &kr); err != nil {
 			log.Printf("Error unmarshaling key request: %v", err.Error())
@@ -45,7 +44,6 @@ func RecvMsg(data []byte) Message {
 		return kr
 
 	case MSG_KEY_RESPONSE:
-		log.Println("Got KEY_RESPONSE")
 		var kr KeyResponse
 		if err := json.Unmarshal(data, &kr); err != nil {
 			log.Printf("Error unmarshaling key response: %v", err.Error())
@@ -54,7 +52,6 @@ func RecvMsg(data []byte) Message {
 		return kr
 
 	case MSG_KEY_DISPATCH:
-		log.Println("Got KEY_DISPACH")
 		var d Dispatch
 		if err := json.Unmarshal(data, &d); err != nil {
 			log.Printf("Error unmarshaling dispatch: %v", err.Error())
@@ -63,7 +60,6 @@ func RecvMsg(data []byte) Message {
 		return d
 
 	case MSG_AUTH_REQUEST:
-		log.Println("Got AUTH_REQUEST")
 		var ar AuthRequest
 		if err := json.Unmarshal(data, &ar); err != nil {
 			log.Printf("Error unmarshaling auth request: %v", err.Error())
@@ -72,7 +68,6 @@ func RecvMsg(data []byte) Message {
 		return ar
 
 	case MSG_AUTH_RESPONSE:
-		log.Println("Got AUTH_RESPONSE")
 		var ar AuthResponse
 		if err := json.Unmarshal(data, &ar); err != nil {
 			log.Printf("Error unmarshaling auth response: %v", err.Error())
@@ -81,7 +76,6 @@ func RecvMsg(data []byte) Message {
 		return ar
 
 	case MSG_ERR:
-		log.Println("Got ERR")
 		var e ErrorMessage
 		if err := json.Unmarshal(data, &e); err != nil {
 			log.Printf("The server sent an error, additionaly an error was encountered parsing it: %v", err.Error())
