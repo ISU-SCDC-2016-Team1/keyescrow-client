@@ -76,17 +76,17 @@ func main() {
 	case "get":
 		fmt.Print("token> ")
 		token, _ := gopass.GetPasswd()
-		getKey(options.Host, options.Get.User, token, options.Get.To)
+		getKey(options.Host, options.Get.User, string(token), options.Get.To)
 		break
 	case "set":
 		fmt.Print("token> ")
 		token, _ := gopass.GetPasswd()
-		setKey(options.Host, options.Set.User, token, options.Set.Pubkey, options.Set.Privkey)
+		setKey(options.Host, options.Set.User, string(token), options.Set.Pubkey, options.Set.Privkey)
 		break
 	case "dispatch":
 		fmt.Print("token> ")
 		token, _ := gopass.GetPasswd()
-		dispatchKey(options.Host, options.Dispatch.User, token)
+		dispatchKey(options.Host, options.Dispatch.User, string(token))
 		break
 	case "generate":
 		fmt.Print("token> ")
@@ -121,7 +121,7 @@ func main() {
 
 		ioutil.WriteFile(pubLoc, ssh.MarshalAuthorizedKey(pub), 0777)
 
-		setKey(options.Host, user, token, pubLoc, priLoc)
+		setKey(options.Host, user, string(token), pubLoc, priLoc)
 		break
 	}
 }
@@ -195,7 +195,7 @@ func setKey(host *net.TCPAddr, username string, token string, pubkey string, pri
 	}
 	defer client.Close()
 
-	err = client.SetKey(username, token, pubkey, privkey)
+	err = client.SetKey(username, string(token), pubkey, privkey)
 	if err != nil {
 		log.Fatalf("Error setting key: %v", err.Error())
 	}
