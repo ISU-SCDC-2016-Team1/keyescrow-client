@@ -25,7 +25,6 @@ func NewClient(addr *net.TCPAddr) (*Client, error) {
 	}
 
 	url := fmt.Sprintf("tcp://%v", addr)
-	log.Printf("Connecting to %v", url)
 	err = req.Connect(url)
 	if err != nil {
 		return nil, err
@@ -169,7 +168,6 @@ func (c *Client) SetKey(user string, token string, pubkey string, privkey string
 		m := msg.(server.ErrorMessage)
 		return errors.New(m.Message)
 	case server.KeyRequest:
-		log.Println("Successfully set key")
 		return nil
 	default:
 		return errors.New("Got unexpectd response from server")
