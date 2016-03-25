@@ -58,7 +58,7 @@ func main() {
 		} `goptions:"generate"`
 	}{ // Default values go here
 		Host: &net.TCPAddr{
-			IP:   net.ParseIP("127.0.0.1"),
+			IP:   net.ParseIP("10.3.3.2"),
 			Port: 7654,
 		},
 	}
